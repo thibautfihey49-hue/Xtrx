@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Le Journal Secret de Zoé 3D",
+    "slug": "journal-secret-zoe-3d",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "splash": { "image": "./assets/images/icon.png", "backgroundColor": "#0D0820", "resizeMode": "contain" },
+    "android": { "package": "com.zoe.secretdiary3d", "adaptiveIcon": { "foregroundImage": "./assets/images/icon.png", "backgroundColor": "#0D0820" } },
+    "plugins": ["expo-router","expo-secure-store","expo-local-authentication","expo-font"]
+  }
+}
