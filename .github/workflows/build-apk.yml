@@ -23,12 +23,18 @@ jobs:
         run: npm install
       - name: Prebuild Android
         run: npx expo prebuild --platform android --clean --no-install
-      - name: Patch Gradle fix release property
+      - name: Fix Gradle 8.6 + AGP 8.2.1 (Expo 51)
         run: |
-          sed -i "s/com.android.tools.build:gradle:8.2.1/com.android.tools.build:gradle:8.1.4/g" android/build.gradle || true
-          sed -i "s/gradle-8.3-all.zip/gradle-8.1-all.zip/g" android/gradle/wrapper/gradle-wrapper.properties || true
+          echo "Forcing Gradle 8.6 for Expo SDK 51..."
+          sed -i "s/gradle-.*-all.zip/gradle-8.6-all.zip/g" android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
+          # Garde AGP 8.2.1 (ne downgrade pas en 8.1.4)
+          grep -n "com.android.tools.build:gradle" android/build.gradle
       - name: Build APK
-        run: cd android && chmod +x ./gradlew && ./gradlew assembleRelease
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --warning-mode all
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with: { name: journal-zoe-3d-apk, path: android/app/build/outputs/apk/release/*.apk }
