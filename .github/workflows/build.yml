@@ -10,24 +10,19 @@ jobs:
         with:
           node-version: 20
           cache: npm
-
       - run: npm install
-
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-
       - name: Build APK on EAS
         run: |
           sudo apt-get update && sudo apt-get install -y jq
           eas build --platform android --profile preview --non-interactive --wait --json | tee build.json
-          cat build.json
-          URL=$(jq -r 'if type=="array" then.[0].artifacts[0].url //.[0].artifacts.buildUrl else.artifacts[0].url //.artifacts.buildUrl //.buildUrl end' build.json)
+          URL=$(jq -r 'if type=="array" then.[0] else. end |.artifacts.buildUrl //.artifacts.applicationArchiveUrl //.buildUrl // empty' build.json)
           echo "APK URL: $URL"
           curl -L -o app.apk "$URL"
           ls -lh app.apk
-
       - uses: actions/upload-artifact@v4
         with:
           name: Xtrx-apk
