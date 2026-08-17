@@ -16,7 +16,8 @@
       "package": "com.zoe.secretdiary3d",
       "adaptiveIcon": {
         "backgroundColor": "#0a0a1a"
-      }
+      },
+      "minSdkVersion": 24
     },
     "plugins": [
       "expo-router",
