@@ -33,7 +33,8 @@
             "gradleVersion": "8.6"
           }
         }
-      ]
+      ],
+      "./with-gradle-fix.js"
     ],
     "extra": {
       "router": {
