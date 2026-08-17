@@ -22,10 +22,15 @@ jobs:
           npm install
       - name: Prebuild
         run: npx expo prebuild --platform android --clean
-      - name: Fix Gradle - static paths
+      - name: Fix settings.gradle with repositories
         run: |
           cat > android/settings.gradle << 'GRADLE'
           pluginManagement {
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+            }
             includeBuild("../node_modules/expo-modules-core/android")
             includeBuild("../node_modules/@react-native/gradle-plugin")
             includeBuild("../node_modules/@expo/prebuild-config")
@@ -39,12 +44,16 @@ jobs:
           include ':app'
           includeBuild("../node_modules/@react-native/gradle-plugin")
           GRADLE
+          echo "=== settings.gradle ==="
           cat android/settings.gradle
+          echo "=== wrapper ==="
           sed -i "s/gradle-.*-all.zip/gradle-8.6-all.zip/g" android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
+          echo "=== build.gradle patch ==="
           sed -i "s/com.android.tools.build:gradle:8.2.1/com.android.tools.build:gradle:8.1.4/g" android/build.gradle
           sed -i 's/components\.release/components.findByName("release")/g' node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
       - name: Build APK
-        run: cd android && chmod +x ./gradlew && ./gradlew assembleRelease
+        run: cd android && chmod +x ./gradlew && ./gradlew assembleRelease --info
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with: { name: journal-zoe-3d-apk, path: android/app/build/outputs/apk/release/*.apk }
