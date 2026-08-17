@@ -1,4 +1,4 @@
-name: Build APK - EAS Local
+name: Build APK - Journal Zoe 3D
 on:
   push:
     branches: [ main ]
@@ -13,18 +13,45 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: android-actions/setup-android@v3
-      - name: Generate valid icon
+      - name: Generate icon + deps
         run: |
           pip install Pillow -q
           mkdir -p assets/images assets/lottie
           python3 -c "from PIL import Image; Image.new('RGB', (1024,1024), (13,8,32)).save('assets/images/icon.png')"
           echo '{"v":"5.5.7"}' > assets/lottie/sparkle.json
-      - name: Setup EAS
-        run: npm install -g eas-cli
-      - name: Install deps
-        run: npm install
-      - name: Build APK local
-        run: eas build --platform android --profile local --local --non-interactive --output ./app-release.apk --no-wait
+          npm install
+      - name: Prebuild
+        run: npx expo prebuild --platform android --clean
+      - name: Fix settings.gradle + Gradle 8.6 + AGP 8.1.4 + release bug
+        run: |
+          cat > android/settings.gradle << 'GRADLE'
+          pluginManagement {
+            def expoModulesCorePlugin = new File(["node", "--print", "require.resolve('expo-modules-core/package.json')"].execute(null, rootDir).text.trim(), "../android").getParentFile().toString()
+            def reactNativeGradlePlugin = new File(["node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', {paths: [require.resolve('react-native/package.json')]})"].execute(null, rootDir).text.trim(), "../").getParentFile().toString()
+            includeBuild(expoModulesCorePlugin)
+            includeBuild(reactNativeGradlePlugin)
+            def expoPrebuildConfig = new File(["node", "--print", "require.resolve('@expo/prebuild-config/package.json')"].execute(null, rootDir).text.trim(), "../android").getParentFile().toString()
+            includeBuild(expoPrebuildConfig)
+          }
+          plugins {
+            id("com.facebook.react.settings")
+          }
+          extensions.configure(com.facebook.react.ReactSettingsExtension){ ex ->
+            ex.autolinkLibrariesFromCommand()
+          }
+          include ':app'
+          includeBuild(new File(["node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', {paths: [require.resolve('react-native/package.json')]})"].execute(null, rootDir).text.trim(), "../").getParentFile().toString())
+          GRADLE
+          
+          cat android/settings.gradle
+          sed -i "s/gradle-.*-all.zip/gradle-8.6-all.zip/g" android/gradle/wrapper/gradle-wrapper.properties
+          sed -i "s/com.android.tools.build:gradle:8.2.1/com.android.tools.build:gradle:8.1.4/g" android/build.gradle
+          sed -i 's/components\.release/components.findByName("release")/g' node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        with: { name: journal-zoe-3d-apk, path: app-release.apk }
+        with: { name: journal-zoe-3d-apk, path: android/app/build/outputs/apk/release/*.apk }
