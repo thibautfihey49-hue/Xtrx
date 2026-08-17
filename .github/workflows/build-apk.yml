@@ -22,7 +22,7 @@ jobs:
           npm install
       - name: Prebuild
         run: npx expo prebuild --platform android --clean
-      - name: Fix all Gradle files
+      - name: Fix Gradle
         run: |
           cat > android/settings.gradle << 'GRADLE'
           pluginManagement {
@@ -46,23 +46,24 @@ jobs:
           GRADLE
           sed -i "s/gradle-.*-all.zip/gradle-8.6-all.zip/g" android/gradle/wrapper/gradle-wrapper.properties
           sed -i "s/com.android.tools.build:gradle:8.2.1/com.android.tools.build:gradle:8.1.4/g" android/build.gradle
-          
-          echo "Patch expo-modules-core/android/build.gradle"
           python3 << 'PY'
-          import pathlib
-          for path in ["node_modules/expo-modules-core/android/build.gradle", "node_modules/@expo/prebuild-config/build.gradle", "node_modules/@expo/prebuild-config/build/build.gradle"]:
-              p = pathlib.Path(path)
-              if not p.exists():
-                  continue
+          import pathlib, re
+          for path_str in ["node_modules/expo-modules-core/android/build.gradle", "node_modules/@expo/prebuild-config/build.gradle"]:
+              p = pathlib.Path(path_str)
+              if not p.exists(): continue
               txt = p.read_text()
-              if "buildscript" not in txt:
-                  txt = "buildscript { repositories { google(); mavenCentral(); gradlePluginPortal() } dependencies { classpath 'com.android.tools.build:gradle:8.1.4' } }\n" + txt
-              # fix release property
+              # fix release
               txt = txt.replace("components.release", 'components.findByName("release")')
+              # ensure buildscript has google()
+              if "buildscript" in txt:
+                  # add google() inside existing buildscript repositories if missing
+                  txt = txt.replace("repositories {", "repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n", 1)
+              else:
+                  # add minimal buildscript at top
+                  txt = "buildscript { repositories { google(); mavenCentral(); gradlePluginPortal() } }\n" + txt
               p.write_text(txt)
-              print(f"Patched {path}")
+              print(f"Patched {path_str}")
           PY
-          cat android/settings.gradle
       - name: Build APK
         run: cd android && chmod +x ./gradlew && ./gradlew assembleRelease
       - name: Upload APK
