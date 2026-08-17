@@ -7,37 +7,27 @@
     "orientation": "portrait",
     "scheme": "xtrx",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "backgroundColor": "#0a0a1a",
-      "resizeMode": "contain"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.zoe.secretdiary3d"
-    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "bundleIdentifier": "com.zoe.secretdiary3d" },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#0a0a1a"
-      },
-      "package": "com.zoe.secretdiary3d"
-    },
-    "web": {
-      "favicon": ""
+      "package": "com.zoe.secretdiary3d",
+      "adaptiveIcon": { "backgroundColor": "#0a0a1a" }
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
-    ],
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "fd141609-5221-4bf1-b440-94b083b7a047"
-      }
-    }
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0",
+            "kotlinVersion": "1.9.24",
+            "gradleVersion": "8.6"
+          }
+        }
+      ]
+    ]
   }
 }
