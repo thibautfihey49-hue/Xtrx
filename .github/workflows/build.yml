@@ -1,0 +1,38 @@
+name: Build APK - EAS Cloud
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm install
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build APK on EAS (wait)
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          eas build --platform android --profile preview --non-interactive --wait --json | tee build.json
+          URL=$(jq -r '.artifacts[0].url //.artifacts.buildUrl //.buildUrl // empty' build.json)
+          echo "Artifact URL: $URL"
+          if [ -z "$URL" ]; then echo "No URL found"; cat build.json; exit 1; fi
+          curl -L -o app.apk "$URL"
+          ls -lh app.apk
+
+      - name: Upload APK to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xtrx-apk
+          path: app.apk
+          if-no-files-found: error
