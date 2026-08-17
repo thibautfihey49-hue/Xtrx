@@ -1,10 +1,10 @@
-name: Build APK - Journal Zoe 3D
+name: Build APK - EAS Local (Expo 51)
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,7 +13,11 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: android-actions/setup-android@v3
-      - name: Generate valid icon
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Generate valid icon (fix CRC)
         run: |
           pip install Pillow -q
           mkdir -p assets/images assets/lottie
@@ -21,39 +25,11 @@ jobs:
           echo '{"v":"5.5.7"}' > assets/lottie/sparkle.json
       - name: Install deps
         run: npm install
-      - name: Prebuild Android
-        run: npx expo prebuild --platform android --clean
-      - name: Fix Expo plugin includeBuild + Gradle
+      - name: Build APK with EAS Local
         run: |
-          echo "=== settings.gradle BEFORE ==="
-          cat android/settings.gradle
-          echo ""
-          # Patch settings.gradle to explicitly include expo plugin
-          python3 << 'PY'
-          import pathlib
-          p = pathlib.Path("android/settings.gradle")
-          txt = p.read_text()
-          # Inject includeBuild if missing
-          if 'expo-modules-core' not in txt:
-              txt = txt.replace('pluginManagement {', 'pluginManagement {\n  includeBuild("../node_modules/expo-modules-core/android")\n  includeBuild("../node_modules/@expo/prebuild-config/build")')
-          # Also ensure includeBuild for react-native-gradle-plugin
-          if 'react-native-gradle-plugin' not in txt:
-              txt = txt.replace('includeBuild("../node_modules/@react-native/gradle-plugin")', 'includeBuild("../node_modules/@react-native/gradle-plugin")\n  includeBuild("../node_modules/expo-modules-core/android")')
-          p.write_text(txt)
-          print("Patched settings.gradle")
-          PY
-          echo "=== settings.gradle AFTER ==="
-          cat android/settings.gradle
-          echo ""
-          echo "Patch release property..."
-          sed -i 's/components\.release/components.findByName("release")/g' node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle || true
-          sed -i "s/gradle-.*-all.zip/gradle-8.6-all.zip/g" android/gradle/wrapper/gradle-wrapper.properties
-          sed -i "s/com.android.tools.build:gradle:8.2.1/com.android.tools.build:gradle:8.1.4/g" android/build.gradle
-      - name: Build APK
-        run: |
-          cd android
-          chmod +x ./gradlew
-          ./gradlew assembleRelease
+          eas build --platform android --local --non-interactive --output ./app-release.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        with: { name: journal-zoe-3d-apk, path: android/app/build/outputs/apk/release/*.apk }
+        with:
+          name: journal-zoe-3d-apk
+          path: app-release.apk
