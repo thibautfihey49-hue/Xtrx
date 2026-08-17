@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: android-actions/setup-android@v3
-      - name: Generate valid icon (fix CRC)
+      - name: Generate valid icon
         run: |
           pip install Pillow -q
           mkdir -p assets/images assets/lottie
@@ -22,27 +22,38 @@ jobs:
       - name: Install deps
         run: npm install
       - name: Prebuild Android
-        run: npx expo prebuild --platform android --clean --no-install
-      - name: Fix Expo SDK 51 - patch release property + plugin
+        run: npx expo prebuild --platform android --clean
+      - name: Fix Expo plugin includeBuild + Gradle
         run: |
-          echo "Patching ExpoModulesCorePlugin.gradle..."
+          echo "=== settings.gradle BEFORE ==="
+          cat android/settings.gradle
+          echo ""
+          # Patch settings.gradle to explicitly include expo plugin
+          python3 << 'PY'
+          import pathlib
+          p = pathlib.Path("android/settings.gradle")
+          txt = p.read_text()
+          # Inject includeBuild if missing
+          if 'expo-modules-core' not in txt:
+              txt = txt.replace('pluginManagement {', 'pluginManagement {\n  includeBuild("../node_modules/expo-modules-core/android")\n  includeBuild("../node_modules/@expo/prebuild-config/build")')
+          # Also ensure includeBuild for react-native-gradle-plugin
+          if 'react-native-gradle-plugin' not in txt:
+              txt = txt.replace('includeBuild("../node_modules/@react-native/gradle-plugin")', 'includeBuild("../node_modules/@react-native/gradle-plugin")\n  includeBuild("../node_modules/expo-modules-core/android")')
+          p.write_text(txt)
+          print("Patched settings.gradle")
+          PY
+          echo "=== settings.gradle AFTER ==="
+          cat android/settings.gradle
+          echo ""
+          echo "Patch release property..."
           sed -i 's/components\.release/components.findByName("release")/g' node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle || true
-          sed -i 's/project\.components\.release/project.components.findByName("release")/g' node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle || true
-          # Fix second place where release is used
-          sed -i 's/def releaseComponent = project.components.release/def releaseComponent = project.components.findByName("release")/g' node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle || true
-          cat node_modules/expo-modules-core/android/ExpoModulesCorePlugin.gradle | grep -n "release" | head -20
-          
-          echo "Forcing Gradle 8.6..."
           sed -i "s/gradle-.*-all.zip/gradle-8.6-all.zip/g" android/gradle/wrapper/gradle-wrapper.properties
-          
-          echo "Force AGP 8.1.4 to avoid release property bug..."
           sed -i "s/com.android.tools.build:gradle:8.2.1/com.android.tools.build:gradle:8.1.4/g" android/build.gradle
-          cat android/build.gradle | grep gradle
       - name: Build APK
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew assembleRelease
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with: { name: journal-zoe-3d-apk, path: android/app/build/outputs/apk/release/*.apk }
