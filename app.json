@@ -11,7 +11,9 @@
       "backgroundColor": "#0a0a1a",
       "resizeMode": "contain"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.zoe.secretdiary3d"
@@ -28,6 +30,14 @@
     "plugins": [
       "expo-router",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "fd141609-5221-4bf1-b440-94b083b7a047"
+      }
+    }
   }
 }
