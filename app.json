@@ -2,7 +2,6 @@
   "expo": {
     "name": "Xtrx",
     "slug": "xtrx",
-    "owner": "tybofihey49",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "xtrx",
@@ -39,9 +38,6 @@
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": "fd141609-5221-4bf1-b440-94b083b7a047"
       }
     }
   }
