@@ -12,10 +12,13 @@
     "expo-modules-core": "~1.12.17",
     "expo-router": "~3.5.23",
     "expo-secure-store": "~13.0.1",
+    "expo-status-bar": "^57.0.1",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-reanimated": "^3.10.1",
+    "react-native-safe-area-context": "^5.9.0",
+    "react-native-screens": "^4.27.0",
     "tailwindcss": "^3.3.2"
   },
   "name": "Xtrx",
