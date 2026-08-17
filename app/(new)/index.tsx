@@ -1,63 +1,42 @@
-import { View, Text, TextInput, Image, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import * as Haptics from 'expo-haptics';
-import * as ImagePicker from 'expo-image-picker';
-import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
-import NeonButton from '../../components/NeonButton';
 import { useRouter } from 'expo-router';
 import { saveNewEntry } from '../../lib/storage';
 
 export default function NewEntry() {
-  const [text, setText] = useState('');
-  const [imageUri, setImageUri] = useState<string | undefined>();
-  const [audioUri, setAudioUri] = useState<string | undefined>();
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [text, setText] = useState("Today was amazing! ✨\nWe slayed our practice, and Zoey nailed that high note again! 💖\n\nI feel like anything is possible when we're together. HUNTR/X forever!\n\n- can't wait for our next mission! 🐱⚔️");
   const router = useRouter();
-
-  const pickImage = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ quality: 0.7, mediaTypes: ImagePicker.MediaTypeOptions.Images });
-    if (!res.canceled) {
-      const uri = res.assets[0].uri;
-      const newPath = FileSystem.documentDirectory + Date.now() + '.jpg';
-      await FileSystem.copyAsync({ from: uri, to: newPath });
-      setImageUri(newPath);
-    }
-  };
-  const startRec = async () => {
-    await Audio.requestPermissionsAsync();
-    await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-    const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-    setRecording(recording);
-  };
-  const stopRec = async () => {
-    if (!recording) return;
-    await recording.stopAndUnloadAsync();
-    const uri = recording.getURI();
-    if (uri) {
-      const newPath = FileSystem.documentDirectory + Date.now() + '.m4a';
-      await FileSystem.copyAsync({ from: uri, to: newPath });
-      setAudioUri(newPath);
-    }
-    setRecording(null);
-  };
-
   return (
-    <View style={{ flex: 1, backgroundColor: '#0D0820', padding: 20 }}>
-      <Text style={{ color: '#FFD700', fontSize: 22, marginTop: 40, marginBottom: 20 }}>Nouvelle Entrée ✨</Text>
-      <TextInput value={text} onChangeText={setText} placeholder="Cher journal..." placeholderTextColor="rgba(255,255,255,0.4)" multiline style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#fff', borderRadius: 15, padding: 15, height: 150, textAlignVertical: 'top' }} />
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
-        <Pressable onPress={pickImage} style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: 12, borderRadius: 12 }}><Text style={{ color: '#fff' }}>📸 Photo</Text></Pressable>
-        <Pressable onPress={recording? stopRec : startRec} style={{ backgroundColor: recording? '#FF6EC7' : 'rgba(255,255,255,0.1)', padding: 12, borderRadius: 12 }}><Text style={{ color: '#fff' }}>{recording? '⏹️ Stop' : '🎙️ Vocal'}</Text></Pressable>
+    <LinearGradient colors={['#151045','#0E0A24']} style={{ flex: 1, padding: 10 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 40, alignItems: 'center' }}>
+        <Text style={{ color: '#fff', fontSize: 18 }}>⬅️</Text>
+        <View style={{ alignItems: 'center' }}><Text style={{ color: '#FFD700', fontWeight: '800' }}>✨ NEW DIARY ENTRY ✨</Text><Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10 }}>✦ let your story shine ✦</Text></View>
+        <Text style={{ color: '#fff' }}>✕</Text>
       </View>
-      {imageUri && <Image source={{ uri: imageUri }} style={{ width: '100%', height: 150, borderRadius: 12, marginTop: 12 }} />}
-      {audioUri && <Text style={{ color: '#FFD700', marginTop: 10 }}>🎧 Vocal enregistré</Text>}
-      <View style={{ marginTop: 20 }}><NeonButton title="Sauvegarder 💜" onPress={async () => {
-        if (!text.trim() &&!imageUri &&!audioUri) return;
-        await saveNewEntry({ text, imageUri, audioUri });
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace('/(home)');
-      }} /></View>
-    </View>
+
+      <View style={{ flexDirection: 'row', gap: 6, marginTop: 14 }}>
+        {[{i:'🎙️',t:'VOICE NOTE',s:'tap to record',a:true},{i:'🖼️',t:'INSERT PHOTO',s:'add a memory'},{i:'📹',t:'INSERT VIDEO',s:'capture the vibe'},{i:'⭐',t:'STICKERS',s:'express yourself'}].map((b,idx)=>(
+          <LinearGradient key={idx} colors={b.a?['#FF8FD6','rgba(255,255,255,0.1)']:['rgba(255,255,255,0.1)','rgba(255,255,255,0.05)']} style={{ flex: 1, borderRadius: 14, padding: 8, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
+            <Text style={{ fontSize: 18 }}>{b.i}</Text><Text style={{ color: '#fff', fontSize: 7, fontWeight: '700', marginTop: 2, textAlign: 'center' }}>{b.t}</Text><Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 6, textAlign: 'center' }}>{b.s}</Text>
+          </LinearGradient>
+        ))}
+      </View>
+
+      <View style={{ marginTop: 14, backgroundColor: '#EDE8FF', borderRadius: 22, padding: 14, borderWidth: 3, borderColor: '#C9B6FF', minHeight: 360 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={{ fontSize: 11, fontWeight: '600' }}>✨ What's on your mind, hunter?</Text>
+          <View style={{ backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#ddd' }}><Text style={{ fontSize: 8 }}>124/5000 📝</Text></View>
+        </View>
+        <TextInput value={text} onChangeText={setText} multiline style={{ marginTop: 10, fontSize: 13, lineHeight: 19, color: '#2A1B5D' }} />
+        <View style={{ flexDirection: 'row', marginTop: 10, gap: 6 }}>
+          <Text>💖</Text><Text>⭐</Text><Text>✨</Text>
+        </View>
+      </View>
+
+      <Pressable onPress={async () => { await saveNewEntry({ text }); router.replace('/(home)'); }} style={{ marginTop: 12, backgroundColor: '#FFD700', borderRadius: 14, padding: 12, alignItems: 'center' }}>
+        <Text style={{ fontWeight: '800' }}>✨ Sauvegarder HUNTR/X ✨</Text>
+      </Pressable>
+    </LinearGradient>
   );
 }
