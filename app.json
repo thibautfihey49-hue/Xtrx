@@ -7,11 +7,17 @@
     "orientation": "portrait",
     "scheme": "xtrx",
     "userInterfaceStyle": "dark",
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "bundleIdentifier": "com.zoe.secretdiary3d" },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.zoe.secretdiary3d"
+    },
     "android": {
       "package": "com.zoe.secretdiary3d",
-      "adaptiveIcon": { "backgroundColor": "#0a0a1a" }
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0a1a"
+      }
     },
     "plugins": [
       "expo-router",
@@ -28,6 +34,14 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "fd141609-5221-4bf1-b440-94b083b7a047"
+      }
+    }
   }
 }
