@@ -1,4 +1,4 @@
-name: Build APK - EAS Local (Expo 51)
+name: Build APK - EAS Local
 on:
   push:
     branches: [ main ]
@@ -13,23 +13,18 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: android-actions/setup-android@v3
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-      - name: Generate valid icon (fix CRC)
+      - name: Generate valid icon
         run: |
           pip install Pillow -q
           mkdir -p assets/images assets/lottie
           python3 -c "from PIL import Image; Image.new('RGB', (1024,1024), (13,8,32)).save('assets/images/icon.png')"
           echo '{"v":"5.5.7"}' > assets/lottie/sparkle.json
+      - name: Setup EAS
+        run: npm install -g eas-cli
       - name: Install deps
         run: npm install
-      - name: Build APK with EAS Local
-        run: |
-          eas build --platform android --local --non-interactive --output ./app-release.apk
+      - name: Build APK local
+        run: eas build --platform android --profile local --local --non-interactive --output ./app-release.apk --no-wait
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        with:
-          name: journal-zoe-3d-apk
-          path: app-release.apk
+        with: { name: journal-zoe-3d-apk, path: app-release.apk }
